@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ข้อมูลจาก Google Sheets</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 6px;
+            border: 1px solid black;
+            vertical-align: top;
+        }
+        thead tr {
+            background-color: #d0e0f0;
+        }
+        .true-cell {
+            background-color: #81c784;
+        }
+        .false-cell {
+            background-color: #e57373;
+        }
+        .center {
+            text-align: center;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .triple-table {
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .center-btn {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .big-button {
+            font-size: 18px;      /* ขนาดตัวอักษร */
+            padding: 10px 20px;   /* ความสูงและความกว้าง */
+            border-radius: 5px;   /* มุมโค้ง */
+            cursor: pointer;
+            background-color: #FF9800; /* สีส้มสด*/
+            color: #fff;
+            border: none;
+            margin: 5px;
+        }
+        .big-button:hover {
+            background-color: #F57C00;
+        }
+    </style>
+</head>
+<body>
+<h2>ข้อขัดข้องการใช้งานระบบ IAMS (Internal Audit Management System)</h2>
+
+<!-- ช่องเลือกเดือน/ปี -->
+<form method="get" th:action="@{/sheets/table}">
+    <label>เดือน:
+        <select name="month">
+            <option value="0">ทั้งหมด</option>
+            <option th:each="i : ${#numbers.sequence(1,12)}"
+                    th:value="${i}" th:text="${i}"
+                    th:selected="${i == param.month}"></option>
+        </select>
+    </label>
+    <label>ปี:
+        <input type="text" name="year"
+               th:value="${param.year != null ? param.year : defaultYear}" />
+    </label>
+    <button type="submit">ดูข้อมูล</button>
+</form>
+
+<hr/>
+
+<h3>ตารางข้อขัดข้องระบบ IAMS</h3>
+<table th:if="${singleData != null and !singleData.isEmpty()}">
+    <thead>
+    <tr>
+        <th>ลำดับ</th>
+        <th>หัวข้อ</th>
+        <th>รายละเอียด</th>
+        <th class="center">วันที่แจ้ง</th>
+        <th class="center">สถานะ</th>
+        <th class="center">Master Data</th>
+        <th class="center">Request</th>
+        <th class="center">Bug</th>
+        <th class="center">Error</th>
+        <th class="center">สอบถามทั่วไป</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${singleData}">
+        <td th:text="${row['ลำดับ']}"></td>
+        <td th:text="${row['หัวข้อ']}"></td>
+        <td th:text="${row['รายละเอียด']}"></td>
+        <td class="center" th:text="${row['วันที่แจ้ง']}"></td>
+        <td class="center" th:text="${row['สถานะ']}"></td>
+        <td class="center bold" th:text="${row['Master Data']}"></td>
+        <td class="center bold" th:text="${row['Request']}"></td>
+        <td class="center bold" th:text="${row['Bug']}"></td>
+        <td class="center bold" th:text="${row['Error']}"></td>
+        <td class="center bold" th:text="${row['สอบถามทั่วไป']}"></td>
+    </tr>
+    <!-- แถวรวมตามประเภท -->
+    <tr style="font-weight: bold; background-color: #eef;">
+        <td colspan="5" class="center">รวมตามประเภท</td>
+        <td class="center" th:text="${slashSummary['Master Data']}"></td>
+        <td class="center" th:text="${slashSummary['Request']}"></td>
+        <td class="center" th:text="${slashSummary['Bug']}"></td>
+        <td class="center" th:text="${slashSummary['Error']}"></td>
+        <td class="center" th:text="${slashSummary['สอบถามทั่วไป']}"></td>
+    </tr>
+    <!-- แถวรวมทั้งหมด -->
+    <tr style="font-weight: bold; background-color: #eef;">
+        <td colspan="5" class="center">รวมทั้งหมด</td>
+        <td colspan="5" class="center" th:text="${slashTotal}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<form method="get" th:action="@{/sheets/export/single}">
+    <input type="hidden" name="month" th:value="${param.month}" />
+    <input type="hidden" name="year" th:value="${param.year}" />
+    <button type="submit" class="big-button">พิมพ์รายงานข้อขัดข้อง</button>
+</form>
+
+<hr/>
+
+<h3>ตารางสถานะระบบ IAMS</h3>
+<table th:if="${tripleData != null and !tripleData.isEmpty()}" class="triple-table">
+    <thead>
+    <tr>
+        <th class="narrow-date">วันที่</th>
+        <th class="narrow-status">
+            IP URL IAMS SERVER<br/>http://172.16.100.141
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${tripleData}">
+        <td th:text="${row['DATE_TIME']}"></td>
+        <td th:text="${row['https://iams.pea.co.th/']}" th:classappend="${row['class']}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="center-btn">
+    <form method="get" th:action="@{/sheets/export/triple}">
+        <input type="hidden" name="month" th:value="${param.month}" />
+        <input type="hidden" name="year" th:value="${param.year}" />
+        <button type="submit" class="big-button">พิมพ์รายงานสถานะระบบ IAMS</button>
+    </form>
+</div>
+</body>
+</html>
