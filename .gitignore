@@ -36,3 +36,6 @@ build/
 /.idea/
 /*.iml
 *.log
+
+src/main/resources/credentials.json
+
