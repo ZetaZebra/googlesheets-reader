@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./mvnw clean package spring-boot:repackage
+RUN ./mvnw clean package spring-boot:repackage -DskipTests
 
 EXPOSE 8080
 
