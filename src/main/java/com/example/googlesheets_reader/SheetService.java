@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class SheetService {
@@ -38,12 +41,17 @@ public class SheetService {
     @Value("${google.sheet.triple.name}")
     private String tripleSheetName;
 
+    @Value("${google.credentials.json}")
+    private String googleCredentialsJson;
+
     @PostConstruct
     public void init() throws GeneralSecurityException, IOException {
-        InputStream in = getClass().getResourceAsStream("/credentials.json");
-        if (in == null) throw new RuntimeException("Cannot find credentials.json");
+        if (googleCredentialsJson == null || googleCredentialsJson.isEmpty()) {
+            throw new IllegalStateException("Environment variable GOOGLE_CREDENTIALS_JSON is not set!");
+        }
 
-        GoogleCredentials credentials = GoogleCredentials.fromStream(in)
+        GoogleCredentials credentials = GoogleCredentials
+                .fromStream(new ByteArrayInputStream(googleCredentialsJson.getBytes(StandardCharsets.UTF_8)))
                 .createScoped(Collections.singletonList("https://www.googleapis.com/auth/spreadsheets.readonly"));
 
         sheetsService = new Sheets.Builder(
